@@ -31,6 +31,34 @@ var showQuestion = function(question) {
 	return result;
 };
 
+var showAnswerers = function(answerers) {
+	var result = $('.templates .answerers').clone(),
+			name,
+			image,
+			rep,
+			id,
+			type;
+
+	console.log(answerers);
+	name = result.find('.name a');
+	name.attr('href',answerers.user.link);
+	name.text(answerers.user.display_name);
+
+	image = result.find('img');
+	image.attr('src', answerers.user.profile_image);
+
+	rep = result.find('.rep');
+	rep.text(answerers.user.reputation);
+
+	id = result.find('.user-id');
+	id.text(answerers.user.user_id);
+
+	type = result.find('.user-type');
+	type.text(answerers.user.user_type);
+
+	return result;
+};
+
 
 // this function takes the results object from StackOverflow
 // and returns the number of results and tags to be appended to DOM
@@ -83,35 +111,29 @@ var getUnanswered = function(tags) {
 };
 
 var getInspired = function(tags) {
-	console.log(tags);
 
 	var request = {
-		tagged: tags,
-		site: 'stackoverflow',
-		period: 'all_time',
-		// sort: 'reputation'
+		tag: tags,
+		site: 'stackoverflow'
 	};
 
 	$.ajax({
-		url: "http://api.stackexchange.com/2.2/questions/unanswered",
+		url: "http://api.stackexchange.com/2.2/tags/" + request.tag + "/top-answerers/all_time",
 		data: request,
 		dataType: "jsonp",//use jsonp to avoid cross origin issues
 		type: "GET",
 	})
 	.done(function(result){ //this waits for the ajax to return with a succesful promise object
-		console.log(result);
 
-
-		// var searchResults = showSearchResults(request.tagged, result.items.length);
-		//
-		// $('.search-results').html(searchResults);
-		// //$.each is a higher order function. It takes an array and a function as an argument.
-		// //The function is executed once for each item in the array.
-		// $.each(result.items, function(i, item) {
-		// 	console.log(item);
-		// 	var question = showQuestion(item);
-		// 	$('.results').append(question);
-		// });
+	  var searchResults = showSearchResults(request.tag, result.items.length);
+		$('.search-results').html(searchResults);
+		//$.each is a higher order function. It takes an array and a function as an argument.
+		//The function is executed once for each item in the array.
+		$.each(result.items, function(i, item) {
+			var answerer = showAnswerers(item);
+			// var question = showQuestion(item);
+			$('.results').append(answerer);
+		});
 	})
 	.fail(function(jqXHR, error){ //this waits for the ajax to return with an error promise object
 		var errorElem = showError(error);
